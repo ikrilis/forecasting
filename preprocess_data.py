@@ -17,7 +17,6 @@ datapath = 'data/'
 dataset = pd.read_csv(datapath + 'train.csv')
 features = dataset.copy()
 
-
 # Date Features
 features['date'] = pd.to_datetime(dataset['date'])
 features['year'] = features.date.dt.year
@@ -30,18 +29,23 @@ features['weekofyear'] = features.date.dt.isocalendar().week
 # Additionnal Data Features
 features['daily_avg']  = features.groupby(['item','store','dayofweek'])['sales'].transform('mean')
 features['weeky_avg']  = features.groupby(['item','store','weekofyear'])['sales'].transform('mean')
-features['monthly_avg'] = features.groupby(['item','store','month'])['sales'].transform('mean')
-features = features.dropna()
+rolling_10 = features.groupby(['item'])['sales'].rolling(10).mean().reset_index().drop('level_1', axis=1)
+features['rolling_mean'] = rolling_10['sales'].copy()
 
 # Drop date
 features.drop('date', axis=1, inplace=True)
+features = features.dropna()
 
 #%% Feature Analysis
 # Correlation with the target value
+plt.figure()
 corr = features.drop(['store', 'item'], axis=1).corr()
 sn.heatmap(corr, annot = True)
 
-# Feature importance 
+plt.figure()
+series = dataset[["date", "sales"]]
+plt.plot(features['weeky_avg'])
+
 
 #%% Train Test Split
 X_train , X_test ,y_train, y_test = train_test_split(
